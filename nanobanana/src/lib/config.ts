@@ -3,7 +3,7 @@ import { join } from "path";
 import { homedir } from "os";
 
 const CONFIG_DIR = join(homedir(), ".config", "tokens");
-const TOKEN_FILE = join(CONFIG_DIR, "n8n-cli");
+const TOKEN_FILE = join(CONFIG_DIR, "nanobanana-cli");
 
 export function getToken(): string | null {
   if (!existsSync(TOKEN_FILE)) return null;
@@ -22,7 +22,7 @@ export function removeToken(): void {
   }
 }
 
-export const BASE_URL = process.env.N8N_BASE_URL ?? "http://localhost:5678/api/v1";
+export const BASE_URL = process.env.NANOBANANA_BASE_URL ?? "https://generativelanguage.googleapis.com/v1beta";
 
 export const globalFlags = {
   json: false,
