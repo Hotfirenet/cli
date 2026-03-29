@@ -6,12 +6,12 @@ Each CLI follows the same structure: auth management, typed resources, global `-
 
 ## CLIs
 
-| CLI | API | Resources |
-|-----|-----|-----------|
-| [brevo](./brevo) | Brevo | Contacts, lists, campaigns, transactional, SMS, templates, CRM, ecommerce, webhooks |
-| [n8n](./n8n) | n8n | Workflows, executions, credentials, tags, variables, users, projects, audit |
-| [ha](./ha) | Home Assistant | States, services, events, history, logbook, templates, config — multi-instance |
-| [nanobanana](./nanobanana) | Nanobanana | Generate, edit |
+| CLI | Description | Resources |
+|-----|-------------|-----------|
+| [brevo](./brevo) | CLI for the brevo API | account, attributes, campaigns, contacts, crm-companies, crm-deals, crm-notes, crm-tasks, ecommerce, events, folders, lists, segments, senders, sms-campaigns, templates, transactional, webhooks, whatsapp-campaigns |
+| [ha](./ha) | CLI for the ha API | config, events, history, instances, services, states, template |
+| [n8n](./n8n) | CLI for the n8n API | audit, credentials, executions, projects, tags, users, variables, workflows |
+| [nanobanana](./nanobanana) | CLI for the nanobanana API | edit, generate |
 
 ## Usage
 
