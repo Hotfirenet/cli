@@ -1,6 +1,6 @@
 # cli
 
-A collection of personal CLI tools for interacting with various APIs, built with Bun + TypeScript + Commander.js.
+A collection of CLI tools for APIs and services. Built with Bun + TypeScript. Works standalone or as lightweight tools for AI assistants — each CLI exposes focused actions without heavy MCP context overhead.
 
 Each CLI follows the same structure: auth management, typed resources, global `--json` flag, and tokens stored locally in `~/.config/tokens/`.
 
