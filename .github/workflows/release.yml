@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: write
+  repository-projects: write
 
 jobs:
   release:
@@ -90,6 +91,41 @@ jobs:
               execSync(`git push origin ${tag}`);
               console.log(`Tagged: ${tag}`);
             }
+          }
+          EOF
+
+      - name: Sync repo topics with CLI names
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node - << 'EOF'
+          const { execSync } = require('child_process');
+          const fs = require('fs');
+
+          const dirs = JSON.parse(fs.readFileSync('/tmp/cli_dirs.json', 'utf8'));
+
+          // Get current topics
+          const repo = process.env.GITHUB_REPOSITORY;
+          const current = JSON.parse(
+            execSync(`gh api repos/${repo}/topics`).toString()
+          ).names;
+
+          // Base topics to always keep
+          const base = ['cli', 'typescript', 'bun', 'mcp', 'ai-tools', 'api-client'];
+
+          // Merge: base + CLI names (lowercase), dedup
+          const merged = [...new Set([...base, ...dirs.map(d => d.toLowerCase())])];
+
+          // Only update if something changed
+          const added = merged.filter(t => !current.includes(t));
+          const removed = current.filter(t => !merged.includes(t) && !base.includes(t));
+          if (added.length || removed.length) {
+            execSync(`gh api repos/${repo}/topics --method PUT --input -`, {
+              input: JSON.stringify({ names: merged })
+            });
+            console.log('Topics updated:', merged.join(', '));
+          } else {
+            console.log('Topics unchanged');
           }
           EOF
 
