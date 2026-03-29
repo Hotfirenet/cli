@@ -1,0 +1,104 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect CLIs and update README
+        id: detect
+        run: |
+          node - << 'EOF'
+          const fs = require('fs');
+          const path = require('path');
+
+          // Find all CLI dirs (have package.json + src/)
+          const dirs = fs.readdirSync('.').filter(d => {
+            return fs.statSync(d).isDirectory()
+              && fs.existsSync(`${d}/package.json`)
+              && fs.existsSync(`${d}/src`);
+          }).sort();
+
+          // Build table rows
+          const rows = dirs.map(d => {
+            const pkg = JSON.parse(fs.readFileSync(`${d}/package.json`, 'utf8'));
+            const resources = fs.existsSync(`${d}/src/resources`)
+              ? fs.readdirSync(`${d}/src/resources`)
+                  .filter(f => f !== 'example.ts')
+                  .map(f => f.replace('.ts', ''))
+                  .join(', ')
+              : '';
+            const desc = pkg.description || '';
+            return `| [${d}](./${d}) | ${desc} | ${resources} |`;
+          });
+
+          const table = [
+            '| CLI | Description | Resources |',
+            '|-----|-------------|-----------|',
+            ...rows
+          ].join('\n');
+
+          // Replace table in README between markers
+          let readme = fs.readFileSync('README.md', 'utf8');
+          const marker_start = '<!-- CLI_TABLE_START -->';
+          const marker_end = '<!-- CLI_TABLE_END -->';
+          if (readme.includes(marker_start)) {
+            readme = readme.replace(
+              new RegExp(`${marker_start}[\\s\\S]*?${marker_end}`),
+              `${marker_start}\n${table}\n${marker_end}`
+            );
+          } else {
+            // Replace existing table (between ## CLIs and next ##)
+            readme = readme.replace(
+              /(## CLIs\n\n)[\s\S]*?(\n\n## )/,
+              `$1${table}$2`
+            );
+          }
+          fs.writeFileSync('README.md', readme);
+          console.log('Updated README with CLIs:', dirs.join(', '));
+
+          // Output list for tagging step
+          fs.writeFileSync('/tmp/cli_dirs.json', JSON.stringify(dirs));
+          EOF
+
+      - name: Create tags for new CLIs
+        run: |
+          git fetch --tags
+          node - << 'EOF'
+          const { execSync } = require('child_process');
+          const fs = require('fs');
+
+          const dirs = JSON.parse(fs.readFileSync('/tmp/cli_dirs.json', 'utf8'));
+          const existingTags = execSync('git tag').toString().split('\n').filter(Boolean);
+
+          for (const d of dirs) {
+            const pkg = JSON.parse(fs.readFileSync(`${d}/package.json`, 'utf8'));
+            const version = pkg.version || '0.1.0';
+            const tag = `${d}/v${version}`;
+            if (!existingTags.includes(tag)) {
+              execSync(`git tag ${tag}`);
+              execSync(`git push origin ${tag}`);
+              console.log(`Tagged: ${tag}`);
+            }
+          }
+          EOF
+
+      - name: Commit README if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git diff --quiet README.md || (
+            git add README.md &&
+            git commit -m "chore: auto-update README" &&
+            git push
+          )
