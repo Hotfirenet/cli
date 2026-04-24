@@ -25,7 +25,7 @@ program
   .hook("preAction", (_cmd, action) => {
     const o = action.optsWithGlobals();
     globalFlags.json = o.json ?? false;
-    globalFlags.profile = (actionCmd ?? _cmd).optsWithGlobals().profile ?? null;
+    globalFlags.profile = (action ?? _cmd).optsWithGlobals().profile ?? null;
     globalFlags.format = o.format ?? "text";
     globalFlags.verbose = o.verbose ?? false;
   });
